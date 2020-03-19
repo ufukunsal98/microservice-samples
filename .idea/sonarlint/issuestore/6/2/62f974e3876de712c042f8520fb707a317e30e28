@@ -1,0 +1,4 @@
+
+Ğ%squid:RedundantThrowsDeclarationCheck"’Remove the declaration of thrown exception 'org.springframework.security.core.userdetails.UsernameNotFoundException' which is a runtime exception.(âĞÒøÿÿÿÿ8ş¶‰“.
+isquid:CommentedOutCodeLine "<This block of commented-out lines of code should be removed.(£€µ‡8ş¶‰“.
+nsquid:CommentedOutCodeLine$"<This block of commented-out lines of code should be removed.(šÊ”Ïùÿÿÿÿ8ş¶‰“.

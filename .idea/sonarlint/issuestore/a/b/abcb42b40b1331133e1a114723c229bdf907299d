@@ -1,0 +1,4 @@
+
+^squid:UselessImportCheck"4Remove this unused import 'java.security.Principal'.(’ÛŞ[8™–ï¡.
+Œsquid:UselessImportCheck"aRemove this unused import 'org.springframework.security.core.annotation.AuthenticationPrincipal'.(Øù¢8™–ï¡.
+msquid:S4488"JReplace "@RequestMapping(method = RequestMethod.POST)" with "@PostMapping"(Ñ¦…©üÿÿÿÿ8®Å•”.
