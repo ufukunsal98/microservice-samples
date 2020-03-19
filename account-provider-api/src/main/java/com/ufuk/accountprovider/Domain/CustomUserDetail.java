@@ -1,7 +1,6 @@
 package com.ufuk.accountprovider.Domain;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -10,10 +9,10 @@ import java.util.List;
 
 public class CustomUserDetail implements UserDetails {
 
-    private User user;
+    private Users user;
     private List<String> groups;
 
-    public CustomUserDetail(User user, List<String> groups) {
+    public CustomUserDetail(Users user, List<String> groups) {
         this.user = user;
         this.groups = groups;
     }
@@ -51,7 +50,7 @@ public class CustomUserDetail implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.isEnabled();
+        return user.getIsEnabled();
     }
 
 }

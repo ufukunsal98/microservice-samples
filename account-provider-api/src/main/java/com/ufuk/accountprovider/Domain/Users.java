@@ -11,8 +11,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Table
@@ -21,25 +19,26 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SecurityGroup  implements Serializable {
+public class Users implements Serializable {
 
     @Id
     private String id = UUID.randomUUID().toString();
 
-    @NotNull
     @Column
-    private String name;
+    @NotNull
+    private String username;
 
     @Column
-    private String description;
-
     @NotNull
-    @Column
     private String companyId;
 
-//    @Column
-//    private List<User> users = new ArrayList<>();
+    @Column
+    @NotNull
+    private String password;
+
+    @NotNull
+    private Boolean isEnabled;
 
     @Column
-    private boolean removed = false;
+    private Boolean isVisible;
 }

@@ -1,6 +1,14 @@
 package com.ufuk.accountprovider.Repository;
 
-@N1qlPrimaryIndexed
-@ViewIndexed(designDoc = "user")
-public interface UserRepository {
+import com.ufuk.accountprovider.Domain.Users;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface UserRepository extends JpaRepository<Users, String> {
+
+    List<Users> findByUsername(String userName);
+
 }

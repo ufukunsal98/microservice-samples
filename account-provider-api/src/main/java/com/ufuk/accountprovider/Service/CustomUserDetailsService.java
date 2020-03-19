@@ -1,9 +1,9 @@
 package com.ufuk.accountprovider.Service;
 
 import com.ufuk.accountprovider.Domain.CustomUserDetail;
+import com.ufuk.accountprovider.Domain.Users;
 import com.ufuk.accountprovider.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,16 +23,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        List<User> users = userRepository.findByUsername(name);
+        List<Users> users = userRepository.findByUsername(name);
         if(users.isEmpty()) {
             throw new UsernameNotFoundException("Could not find the user "+name);
         }
 
-        User user = users.get(0);
-        List<SecurityGroup> securityGroups = securityGroupService.listUserGroups(user.getCompanyId(), user.getId());
+        Users user = users.get(0);
+        // List<SecurityGroup> securityGroups = securityGroupService.listUserGroups(user.getCompanyId(), user.getId());
 
-        return new CustomUserDetail(user, securityGroups.stream()
-                .map(e->e.getId())
-                .collect(Collectors.toList()) );
+//        return new CustomUserDetail(user, securityGroups.stream()
+//                .map(e->e.getId())
+//                .collect(Collectors.toList()) );
+        return new CustomUserDetail(user , null);
     }
 }
