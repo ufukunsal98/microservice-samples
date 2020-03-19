@@ -1,151 +1,93 @@
 package com.ufuk.accountprovider.Service;
 
+import com.ufuk.accountprovider.Repository.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.Authentication;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.InvalidClientException;
-import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
-import org.springframework.security.oauth2.common.exceptions.UnsupportedGrantTypeException;
-import org.springframework.security.oauth2.common.util.OAuth2Utils;
-import org.springframework.security.oauth2.provider.*;
-import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestValidator;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
+import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.security.Principal;
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class AccountService   {
 
-    private OAuth2RequestValidator oAuth2RequestValidator = new DefaultOAuth2RequestValidator();
-
-    private Set<HttpMethod> allowedRequestMethods = new HashSet<HttpMethod>(Arrays.asList(HttpMethod.POST));
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    ClientDetailsService clientDetailsService;
+    private SecurityProperties securityProperties;
 
     @Autowired
-    private TokenStore tokenStore;
+    private UserRepository userRepository;
 
     @Autowired
-    private OAuth2RequestFactory requestFactory;
+    private TokenEndpoint tokenEndpoint;
 
-    @RequestMapping(value = "/oauth/token", method=RequestMethod.GET)
-    public ResponseEntity<OAuth2AccessToken> getAccessToken(Principal principal, @RequestParam
-            Map<String, String> parameters) throws HttpRequestMethodNotSupportedException {
-        if (!allowedRequestMethods.contains(HttpMethod.GET)) {
-            throw new HttpRequestMethodNotSupportedException("GET");
-        }
-        return postAccessToken(principal, parameters);
-    }
+    @Autowired
+    private DefaultTokenServices defaultTokenServices;
 
-    @RequestMapping(value = "/oauth/token", method=RequestMethod.POST)
-    public ResponseEntity<OAuth2AccessToken> postAccessToken(Principal principal, @RequestParam
+    @Autowired
+    private ModelMapper modelMapper;
+
+
+
+
+    public OAuth2AccessToken authenticate(HttpServletRequest request, HttpServletResponse response ,
             Map<String, String> parameters) throws HttpRequestMethodNotSupportedException {
 
-        if (!(principal instanceof Authentication)) {
-            throw new InsufficientAuthenticationException(
-                    "There is no client authentication. Try adding an appropriate authentication filter.");
-        }
-
-        String clientId = getClientId(principal);
-        ClientDetails authenticatedClient = clientDetailsService.loadClientByClientId(clientId);
-
-        TokenRequest tokenRequest = requestFactory.createTokenRequest(parameters, authenticatedClient);
-
-        if (clientId != null && !clientId.equals("")) {
-            // Only validate the client details if a client authenticated during this
-            // request.
-            if (!clientId.equals(tokenRequest.getClientId())) {
-                // double check to make sure that the client ID in the token request is the same as that in the
-                // authenticated client
-                throw new InvalidClientException("Given client ID does not match authenticated client");
-            }
-        }
-        if (authenticatedClient != null) {
-            oAuth2RequestValidator.validateScope(tokenRequest, authenticatedClient);
-        }
-        if (!StringUtils.hasText(tokenRequest.getGrantType())) {
-            throw new InvalidRequestException("Missing grant type");
-        }
-        if (tokenRequest.getGrantType().equals("implicit")) {
-            throw new InvalidGrantException("Implicit grant type not supported from token endpoint");
-        }
-
-        if (isAuthCodeRequest(parameters)) {
-            // The scope was requested or determined during the authorization step
-            if (!tokenRequest.getScope().isEmpty()) {
-                //logger.debug("Clearing scope of incoming token request");
-                tokenRequest.setScope(Collections.<String> emptySet());
-            }
-        }
-
-        if (isRefreshTokenRequest(parameters)) {
-            // A refresh token has its own default scopes, so we should ignore any added by the factory here.
-            tokenRequest.setScope(OAuth2Utils.parseParameterList(parameters.get(OAuth2Utils.SCOPE)));
-        }
-
-        OAuth2AccessToken token = null;
-        if (token == null) {
-            throw new UnsupportedGrantTypeException("Unsupported grant type: " + tokenRequest.getGrantType());
-        }
-
-        return getResponse(token);
-
-    }
-
-    /**
-     * @param principal the currently authentication principal
-     * @return a client id if there is one in the principal
-     */
-    protected String getClientId(Principal principal) {
-        Authentication client = (Authentication) principal;
-        if (!client.isAuthenticated()) {
-            throw new InsufficientAuthenticationException("The client is not authenticated.");
-        }
-        String clientId = client.getName();
-        if (client instanceof OAuth2Authentication) {
-            // Might be a client and user combined authentication
-            clientId = ((OAuth2Authentication) client).getOAuth2Request().getClientId();
-        }
-        return clientId;
-    }
 
 
 
-    private ResponseEntity<OAuth2AccessToken> getResponse(OAuth2AccessToken accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Cache-Control", "no-store");
-        headers.set("Pragma", "no-cache");
-        return new ResponseEntity<OAuth2AccessToken>(accessToken, headers, HttpStatus.OK);
-    }
+        HashMap<String, String> authorizationParameters = new HashMap<String, String>();
+        authorizationParameters.put("scope", "read");
+        authorizationParameters.put("username", "user");
+        authorizationParameters.put("client_id", "client_id");
+        authorizationParameters.put("grant", "password");
 
-    private boolean isRefreshTokenRequest(Map<String, String> parameters) {
-        return "refresh_token".equals(parameters.get("grant_type")) && parameters.get("refresh_token") != null;
-    }
+        Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-    private boolean isAuthCodeRequest(Map<String, String> parameters) {
-        return "authorization_code".equals(parameters.get("grant_type")) && parameters.get("code") != null;
-    }
+        Set<String> responseType = new HashSet<String>();
+        responseType.add("password");
 
-    public void setOAuth2RequestValidator(OAuth2RequestValidator oAuth2RequestValidator) {
-        this.oAuth2RequestValidator = oAuth2RequestValidator;
-    }
+        Set<String> scopes = new HashSet<String>();
+        scopes.add("read");
+        scopes.add("write");
 
-    public void setAllowedRequestMethods(Set<HttpMethod> allowedRequestMethods) {
-        this.allowedRequestMethods = allowedRequestMethods;
+        OAuth2Request authorizationRequest = new OAuth2Request(
+                authorizationParameters, "Client_Id",
+                authorities, true,scopes, null, "",
+                responseType, null);
+
+        User userPrincipal = new User("user", "", true, true, true, true, authorities);
+
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                userPrincipal, null, authorities);
+
+        OAuth2Authentication authenticationRequest = new OAuth2Authentication(
+                authorizationRequest, authenticationToken);
+        authenticationRequest.setAuthenticated(true);
+
+        OAuth2AccessToken auth2AccessToken = modelMapper.map(defaultTokenServices.createAccessToken(authenticationRequest) ,
+                com.ufuk.accountprovider.Domain.OAuth2AccessToken.class);
+        System.out.println(auth2AccessToken);
+        return null;
     }
 }
 
