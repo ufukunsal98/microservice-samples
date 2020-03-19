@@ -1,10 +1,15 @@
 package com.ufuk.accountprovider.Config;
 
+import com.ufuk.accountprovider.Entity.OAuthRefreshToken;
+import com.ufuk.accountprovider.Repository.OAuthAccessTokenRepository;
+import com.ufuk.accountprovider.Repository.OAuthRefreshTokenRepository;
 import com.ufuk.accountprovider.Service.CustomUserDetailsService;
+import com.ufuk.accountprovider.Service.OAuthTokenStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +29,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
+    @Autowired
+    private OAuthAccessTokenRepository oAuthAccessTokenRepository;
+
+    @Autowired
+    private OAuthRefreshTokenRepository oAuthRefreshTokenRepository;
+
 
     @Bean
     @Override
@@ -39,8 +50,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure( WebSecurity web ) throws Exception {
-        //web.ignoring().antMatchers( HttpMethod.OPTIONS, "/**" );
-        web.ignoring().antMatchers( "/user/**" );
+        web.ignoring().antMatchers( HttpMethod.OPTIONS, "/**" );
     }
 
     @Override
@@ -49,7 +59,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/oauth/token").permitAll()
-                .antMatchers("/user/me").permitAll()
                 .antMatchers("/api-docs/**").permitAll()
                 .anyRequest().authenticated()
                 .and().anonymous().disable();
@@ -57,7 +66,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public TokenStore tokenStore() {
-        return new InMemoryTokenStore();
+        return new OAuthTokenStore(oAuthAccessTokenRepository, oAuthRefreshTokenRepository);
     }
 
     @Bean

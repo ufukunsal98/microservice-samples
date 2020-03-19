@@ -1,26 +1,15 @@
 package com.ufuk.accountprovider.Config;
 
-import com.ufuk.accountprovider.Domain.CustomTokenGranter;
-import com.ufuk.accountprovider.Service.CustomUserDetailsService;
+import com.ufuk.accountprovider.Service.CustomClientDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.*;
-import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 
 @Configuration
@@ -39,7 +28,6 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     static final int ACCESS_TOKEN_VALIDITY_SECONDS = 1*60*60;
     static final int REFRESH_TOKEN_VALIDITY_SECONDS = 6*60*60;
 
-
     @Autowired
     private TokenStore tokenStore;
 
@@ -47,37 +35,27 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private ClientDetailsService clientDetailsService;
-
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-
+    private CustomClientDetailsService clientDetailService;
 
 
     @Override
     public void configure(ClientDetailsServiceConfigurer configurer) throws Exception {
 
-        configurer
-                .inMemory()
-                .withClient(CLIENT_ID)
-                .secret(CLIENT_SECRET)
-                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN, IMPLICIT )
-                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
-                .accessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS).
-                refreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
+//        configurer
+//                .inMemory()
+//                .withClient(CLIENT_ID)
+//                .secret(CLIENT_SECRET)
+//                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN, IMPLICIT )
+//                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
+//                .accessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS).
+//                refreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
+        configurer.withClientDetails(clientDetailService);
     }
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.tokenStore(tokenStore)
-                .tokenGranter(tokenGranter(endpoints))
                 .authenticationManager(authenticationManager);
-    }
-
-    private TokenGranter tokenGranter(final AuthorizationServerEndpointsConfigurer endpoints) {
-        List<TokenGranter> granters = new ArrayList<TokenGranter>(Arrays.asList(endpoints.getTokenGranter()));
-        granters.add(new CustomTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory(), "custom"));
-        return new CompositeTokenGranter(granters);
     }
 
 
@@ -86,35 +64,4 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         oauthServer.tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()");
     }
-
-    @Bean
-    public OAuth2RequestFactory requestFactory() {
-        CustomOauth2RequestFactory requestFactory = new CustomOauth2RequestFactory(clientDetailsService);
-        requestFactory.setCheckUserScopes(true);
-        return requestFactory;
-    }
-
-    class CustomOauth2RequestFactory extends DefaultOAuth2RequestFactory {
-        @Autowired
-        private TokenStore tokenStore;
-
-        public CustomOauth2RequestFactory(ClientDetailsService clientDetailsService) {
-            super(clientDetailsService);
-        }
-
-        @Override
-        public TokenRequest createTokenRequest(Map<String, String> requestParameters,
-                                               ClientDetails authenticatedClient) {
-            if (requestParameters.get("grant_type").equals("refresh_token")) {
-                OAuth2Authentication authentication = tokenStore.readAuthenticationForRefreshToken(
-                        tokenStore.readRefreshToken(requestParameters.get("refresh_token")));
-                SecurityContextHolder.getContext()
-                        .setAuthentication(new UsernamePasswordAuthenticationToken(authentication.getName(), null,
-                                userDetailsService.loadUserByUsername(authentication.getName()).getAuthorities()));
-            }
-            return super.createTokenRequest(requestParameters, authenticatedClient);
-        }
-    }
-
-
 }
