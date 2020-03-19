@@ -1,9 +1,6 @@
-package com.ufuk.accountprovider.Domain;
+package com.ufuk.accountprovider.Entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,18 +8,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.UUID;
 
-@Table
-@Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Users implements Serializable {
+@Entity
+@Table
+public class Users  implements Serializable {
 
     @Id
-    private String id = UUID.randomUUID().toString();
+    private String id;
 
     @Column
     @NotNull

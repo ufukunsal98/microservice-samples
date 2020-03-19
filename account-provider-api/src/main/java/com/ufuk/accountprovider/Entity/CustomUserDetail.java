@@ -1,11 +1,10 @@
-package com.ufuk.accountprovider.Domain;
+package com.ufuk.accountprovider.Entity;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-
 
 public class CustomUserDetail implements UserDetails {
 
