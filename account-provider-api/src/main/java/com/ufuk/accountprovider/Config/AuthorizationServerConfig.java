@@ -1,36 +1,26 @@
 package com.ufuk.accountprovider.Config;
 
-import com.ufuk.accountprovider.Domain.CustomTokenEnhancer;
 import com.ufuk.accountprovider.Domain.CustomTokenGranter;
 import com.ufuk.accountprovider.Service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.*;
-import org.springframework.security.oauth2.provider.client.ClientCredentialsTokenGranter;
-import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
-import org.springframework.security.oauth2.provider.code.AuthorizationCodeTokenGranter;
-import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
-import org.springframework.security.oauth2.provider.implicit.ImplicitTokenGranter;
-import org.springframework.security.oauth2.provider.password.ResourceOwnerPasswordTokenGranter;
-import org.springframework.security.oauth2.provider.refresh.RefreshTokenGranter;
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
-import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 
 @Configuration
@@ -56,6 +46,11 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private ClientDetailsService clientDetailsService;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
 
 
@@ -75,7 +70,14 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.tokenStore(tokenStore)
+                .tokenGranter(tokenGranter(endpoints))
                 .authenticationManager(authenticationManager);
+    }
+
+    private TokenGranter tokenGranter(final AuthorizationServerEndpointsConfigurer endpoints) {
+        List<TokenGranter> granters = new ArrayList<TokenGranter>(Arrays.asList(endpoints.getTokenGranter()));
+        granters.add(new CustomTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory(), "custom"));
+        return new CompositeTokenGranter(granters);
     }
 
 
@@ -86,70 +88,32 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     }
 
     @Bean
-    @Primary
-    public TokenGranter tokenGranter() {
-        TokenGranter tokenGranter = null;
-        if (tokenGranter == null) {
-            tokenGranter = new TokenGranter() {
-                private CompositeTokenGranter delegate;
-
-                @Override
-                public OAuth2AccessToken grant(String grantType, TokenRequest tokenRequest) {
-                    if (delegate == null) {
-                        delegate = new CompositeTokenGranter(getDefaultTokenGranters());
-                    }
-                    return delegate.grant(grantType, tokenRequest);
-                }
-            };
-        }
-        return tokenGranter;
-    }
-
-
-    private List<TokenGranter> getDefaultTokenGranters() {
-        ClientDetailsService clientDetails = null;
-        AuthorizationServerTokenServices tokenServices = tokenServices();
-        AuthorizationCodeServices authorizationCodeServices = authorizationCodeServices();
-        OAuth2RequestFactory requestFactory = requestFactory();
-
-        List<TokenGranter> tokenGranters = new ArrayList<TokenGranter>();
-        tokenGranters.add(new AuthorizationCodeTokenGranter(tokenServices, authorizationCodeServices, clientDetails,
-                requestFactory));
-        tokenGranters.add(new RefreshTokenGranter(tokenServices, clientDetails, requestFactory));
-        ImplicitTokenGranter implicit = new ImplicitTokenGranter(tokenServices, clientDetails, requestFactory);
-        tokenGranters.add(implicit);
-        tokenGranters.add(new ClientCredentialsTokenGranter(tokenServices, clientDetails, requestFactory));
-        if (authenticationManager != null) {
-            tokenGranters.add(new ResourceOwnerPasswordTokenGranter(authenticationManager, tokenServices, clientDetails,
-                    requestFactory));
-        }
-        return tokenGranters;
-    }
-
-
-    private AuthorizationCodeServices authorizationCodeServices() {
-        AuthorizationCodeServices authorizationCodeServices = new InMemoryAuthorizationCodeServices();
-        return authorizationCodeServices;
-    }
-
-    private OAuth2RequestFactory requestFactory() {
-        OAuth2RequestFactory requestFactory = new DefaultOAuth2RequestFactory(null);
+    public OAuth2RequestFactory requestFactory() {
+        CustomOauth2RequestFactory requestFactory = new CustomOauth2RequestFactory(clientDetailsService);
+        requestFactory.setCheckUserScopes(true);
         return requestFactory;
     }
 
+    class CustomOauth2RequestFactory extends DefaultOAuth2RequestFactory {
+        @Autowired
+        private TokenStore tokenStore;
 
-    @Bean
-    @Primary
-    public AuthorizationServerTokenServices tokenServices() {
-        final DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setAccessTokenValiditySeconds(-1);
-        defaultTokenServices.setTokenStore(tokenStore);
-        return defaultTokenServices;
-    }
+        public CustomOauth2RequestFactory(ClientDetailsService clientDetailsService) {
+            super(clientDetailsService);
+        }
 
-    @Bean
-    public TokenEnhancer tokenEnhancer() {
-        return new CustomTokenEnhancer();
+        @Override
+        public TokenRequest createTokenRequest(Map<String, String> requestParameters,
+                                               ClientDetails authenticatedClient) {
+            if (requestParameters.get("grant_type").equals("refresh_token")) {
+                OAuth2Authentication authentication = tokenStore.readAuthenticationForRefreshToken(
+                        tokenStore.readRefreshToken(requestParameters.get("refresh_token")));
+                SecurityContextHolder.getContext()
+                        .setAuthentication(new UsernamePasswordAuthenticationToken(authentication.getName(), null,
+                                userDetailsService.loadUserByUsername(authentication.getName()).getAuthorities()));
+            }
+            return super.createTokenRequest(requestParameters, authenticatedClient);
+        }
     }
 
 
