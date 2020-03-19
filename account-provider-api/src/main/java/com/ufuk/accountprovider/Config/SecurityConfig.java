@@ -1,11 +1,13 @@
 package com.ufuk.accountprovider.Config;
 
-import com.ufuk.accountprovider.Entity.OAuthRefreshToken;
 import com.ufuk.accountprovider.Repository.OAuthAccessTokenRepository;
 import com.ufuk.accountprovider.Repository.OAuthRefreshTokenRepository;
+import com.ufuk.accountprovider.SecurityContextRestorerFilter;
 import com.ufuk.accountprovider.Service.CustomUserDetailsService;
 import com.ufuk.accountprovider.Service.OAuthTokenStore;
+import com.ufuk.accountprovider.TokenCookieCreationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateFactory;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +20,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -34,6 +37,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private OAuthRefreshTokenRepository oAuthRefreshTokenRepository;
+
+    private final UserInfoRestTemplateFactory userInfoRestTemplateFactory;
+
+    public SecurityConfig(UserInfoRestTemplateFactory userInfoRestTemplateFactory) {
+        this.userInfoRestTemplateFactory = userInfoRestTemplateFactory;
+    }
 
 
     @Bean
@@ -51,6 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure( WebSecurity web ) throws Exception {
         web.ignoring().antMatchers( HttpMethod.OPTIONS, "/**" );
+        web.ignoring().antMatchers( "/user/**" );
     }
 
     @Override
@@ -59,9 +69,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/oauth/token").permitAll()
+                .antMatchers("/user/**").permitAll()
                 .antMatchers("/api-docs/**").permitAll()
                 .anyRequest().authenticated()
-                .and().anonymous().disable();
+                .and().anonymous().disable()
+                .addFilterAfter(new TokenCookieCreationFilter(userInfoRestTemplateFactory), AbstractPreAuthenticatedProcessingFilter.class)
+                .addFilterBefore(new SecurityContextRestorerFilter(userInfoRestTemplateFactory, tokenStore()), AnonymousAuthenticationFilter.class);;
     }
 
     @Bean
