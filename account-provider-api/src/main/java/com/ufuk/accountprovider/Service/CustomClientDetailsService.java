@@ -50,7 +50,7 @@ public class CustomClientDetailsService implements ClientDetailsService {
     static final String SCOPE_WRITE = "write";
     static final String TRUST = "trust";
 
-        @PostConstruct
+    @PostConstruct
     public void saveClientDetail() {
 
             CustomClientDetails client = new CustomClientDetails();

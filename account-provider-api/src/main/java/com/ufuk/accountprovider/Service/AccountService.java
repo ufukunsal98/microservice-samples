@@ -1,6 +1,5 @@
 package com.ufuk.accountprovider.Service;
 
-import com.ufuk.accountprovider.Entity.CustomUserDetail;
 import com.ufuk.accountprovider.Entity.OAuthAccessTokens;
 import com.ufuk.accountprovider.Repository.UserRepository;
 import org.apache.commons.logging.Log;
@@ -10,17 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.*;
-import org.springframework.security.oauth2.common.util.OAuth2Utils;
+import org.springframework.security.oauth2.common.exceptions.BadClientCredentialsException;
+import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
+import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.*;
 import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.security.oauth2.provider.error.DefaultWebResponseExceptionTranslator;
@@ -34,7 +33,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RestControllerAdvice
@@ -138,26 +140,41 @@ public class AccountService {
         return auth2AccessToken;
     }
 
-    public OAuth2AccessToken revokeToken(OAuthAccessTokens oAuthAccessTokens,
-                                         HashMap<String, String> parameters) throws HttpRequestMethodNotSupportedException {
+    public OAuth2AccessToken revokeToken(OAuthAccessTokens oAuthAccessTokens) throws HttpRequestMethodNotSupportedException {
 
+
+        OAuth2AccessToken auth2AccessToken = defaultTokenServices.readAccessToken(oAuthAccessTokens.getAccessToken());
+
+        defaultTokenServices.revokeToken(oAuthAccessTokens.getAccessToken());
+
+        return auth2AccessToken;
+    }
+
+    public OAuth2AccessToken refreshToken(OAuthAccessTokens oAuthAccessTokens,
+                                         HashMap<String, String> parameters) throws HttpRequestMethodNotSupportedException {
 
         HashMap<String, String> authorizationParameters = parameters;
         ClientDetails clientDetails = customClientDetailsService.loadClientByClientId(authorizationParameters.get("client_id"));
-
         Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
         Set<String> responseType = new HashSet<String>();
         responseType.add("password");
-
-
+        UserDetails userDetails = null;
+        TokenRequest tokenRequest = new TokenRequest(authorizationParameters ,
+                clientDetails.getClientId() , clientDetails.getScope() ,  "refresh_token");
         OAuth2Request authorizationRequest = new OAuth2Request(
                 authorizationParameters, clientDetails.getClientId(),
                 authorities, true, clientDetails.getScope(), clientDetails.getResourceIds(), "",
                 responseType, null);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername("asdasd");
+        try {
+            userDetails = userDetailsService.loadUserByUsername(parameters.get("username"));
+        } catch (UsernameNotFoundException exception) {
+            throw new InvalidGrantException("Bad credentials");
+        }
+
+
         User userPrincipal = new User(userDetails.getUsername(), userDetails.getPassword(), new ArrayList<>());
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -166,9 +183,9 @@ public class AccountService {
         OAuth2Authentication authenticationRequest = new OAuth2Authentication(
                 authorizationRequest, authenticationToken);
         authenticationRequest.setAuthenticated(true);
+        defaultTokenServices.refreshAccessToken(oAuthAccessTokens.getAccessToken() , tokenRequest);
 
-        defaultTokenServices.revokeToken(oAuthAccessTokens.getAccessToken());
-        return null;
+        return auth2AccessToken;
     }
 
     protected WebResponseExceptionTranslator getExceptionTranslator() {

@@ -7,7 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,16 +23,19 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+
+
     @PostMapping("user/me")
     public ResponseEntity<OAuth2AccessToken> userInfo(HttpServletRequest request, HttpServletResponse response ,
                                                       @RequestParam HashMap<String, String> parameters) throws Exception {
          return ResponseEntity.ok(accountService.authenticate(request , response , parameters));
     }
-//
-//    @PostMapping("/revoke-token")
-//    public ResponseEntity<OAuth2AccessToken> revokeToken(@RequestBody  OAuthAccessTokens oAuthAccessTokens) {
-//        return ResponseEntity.ok(accountService.revokeToken(oAuthAccessTokens));
-//    }
+
+
+    @PostMapping("/revoke-token")
+    public ResponseEntity<OAuth2AccessToken> revokeToken(@RequestBody  OAuthAccessTokens oAuthAccessTokens) throws HttpRequestMethodNotSupportedException {
+        return ResponseEntity.ok(accountService.revokeToken(oAuthAccessTokens));
+    }
 
 
 }

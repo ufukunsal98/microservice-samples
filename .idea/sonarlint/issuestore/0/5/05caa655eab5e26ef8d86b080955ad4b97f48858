@@ -1,9 +1,9 @@
 
-Isquid:S11723"&Remove these unused method parameters.(şÂêœüÿÿÿÿ8¤ŞŠ£.
-Õ%squid:RedundantThrowsDeclarationCheck4"—Remove the declaration of thrown exception 'org.springframework.web.HttpRequestMethodNotSupportedException', as it cannot be thrown from method's body.(øÇ½Òşÿÿÿÿ8¬™£.
-|squid:S22939"YReplace the type specification in this constructor call with the diamond operator ("<>").(Ğø™øşÿÿÿÿ8Û…Ş¢.
-|squid:S2293?"YReplace the type specification in this constructor call with the diamond operator ("<>").(î½´şÿÿÿÿ8Û…Ş¢.
-wsquid:S2293E"YReplace the type specification in this constructor call with the diamond operator ("<>").(ØäØ–8Û…Ş¢.
+Õ%squid:RedundantThrowsDeclarationCheck4"—Remove the declaration of thrown exception 'org.springframework.web.HttpRequestMethodNotSupportedException', as it cannot be thrown from method's body.(øÇ½Òşÿÿÿÿ8é¦‘¥.
+Isquid:S11723"&Remove these unused method parameters.(şÂêœüÿÿÿÿ8é¦‘¥.
+|squid:S22939"YReplace the type specification in this constructor call with the diamond operator ("<>").(Ğø™øşÿÿÿÿ8é¦‘¥.
+|squid:S2293?"YReplace the type specification in this constructor call with the diamond operator ("<>").(î½´şÿÿÿÿ8é¦‘¥.
+|squid:S2293B"YReplace the type specification in this constructor call with the diamond operator ("<>").(ºƒœÛùÿÿÿÿ8é¦‘¥.
+wsquid:S2293E"YReplace the type specification in this constructor call with the diamond operator ("<>").(ØäØ–8é¦‘¥.
 [
-squid:S106Y"9Replace this use of System.out or System.err by a logger.(™„¡ùÿÿÿÿ8—ıä¢.
-|squid:S2293B"YReplace the type specification in this constructor call with the diamond operator ("<>").(ºƒœÛùÿÿÿÿ8Û…Ş¢.
+squid:S106Y"9Replace this use of System.out or System.err by a logger.(™„¡ùÿÿÿÿ8é¦‘¥.

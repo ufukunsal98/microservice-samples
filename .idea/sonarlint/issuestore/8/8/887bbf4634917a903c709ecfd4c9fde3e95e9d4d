@@ -1,5 +1,5 @@
 
-|squid:S2293P"YReplace the type specification in this constructor call with the diamond operator ("<>").(ıïÀ¯ùÿÿÿÿ8ú”œ“.
-ysquid:S2068""V'PASSWORD' detected in this expression, review this potentially hard-coded credential.(¯—©şÿÿÿÿ8×±‰“.
-qsquid:S1192n"SUse already-defined constant 'REFRESH_TOKEN' instead of duplicating its value here.(¶˜˜î8ìÎĞ–.
-xsquid:S33054"UInject this field value directly into "requestFactory", the only method that uses it.(è™äÓıÿÿÿÿ8¦¾Ì–.
+qsquid:S1192n"SUse already-defined constant 'REFRESH_TOKEN' instead of duplicating its value here.(¶˜˜î8à©‘¥.
+xsquid:S33054"UInject this field value directly into "requestFactory", the only method that uses it.(è™äÓıÿÿÿÿ8à©‘¥.
+ysquid:S2068""V'PASSWORD' detected in this expression, review this potentially hard-coded credential.(¯—©şÿÿÿÿ8à©‘¥.
+|squid:S2293P"YReplace the type specification in this constructor call with the diamond operator ("<>").(ıïÀ¯ùÿÿÿÿ8à©‘¥.
