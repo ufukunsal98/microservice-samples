@@ -183,9 +183,9 @@ public class AccountService {
         OAuth2Authentication authenticationRequest = new OAuth2Authentication(
                 authorizationRequest, authenticationToken);
         authenticationRequest.setAuthenticated(true);
-        defaultTokenServices.refreshAccessToken(oAuthAccessTokens.getAccessToken() , tokenRequest);
+        OAuth2AccessToken oAuth2AccessToken = defaultTokenServices.refreshAccessToken(oAuthAccessTokens.getAccessToken() , tokenRequest);
 
-        return auth2AccessToken;
+        return oAuth2AccessToken;
     }
 
     protected WebResponseExceptionTranslator getExceptionTranslator() {
