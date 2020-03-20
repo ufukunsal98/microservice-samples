@@ -1,7 +1,8 @@
 package com.ufuk.accountprovider.Config;
 
-import com.ufuk.accountprovider.Domain.CustomTokenGranter;
 import com.ufuk.accountprovider.Service.CustomUserDetailsService;
+import com.ufuk.accountprovider.Service.OAuthTokenStore;
+import com.ufuk.accountprovider.Util.Interceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,6 +55,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    Interceptor requestInterceptor;
+
 
 
     @Override
@@ -72,14 +76,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.tokenStore(tokenStore)
-                .tokenGranter(tokenGranter(endpoints))
+                .addInterceptor(requestInterceptor)
                 .authenticationManager(authenticationManager);
-    }
-
-    private TokenGranter tokenGranter(final AuthorizationServerEndpointsConfigurer endpoints) {
-        List<TokenGranter> granters = new ArrayList<TokenGranter>(Arrays.asList(endpoints.getTokenGranter()));
-        granters.add(new CustomTokenGranter(endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory(), "custom"));
-        return new CompositeTokenGranter(granters);
     }
 
 

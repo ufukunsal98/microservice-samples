@@ -62,7 +62,8 @@ public class OAuthTokenStore implements TokenStore {
         cat.setUsername(authentication.isClientOnly() ? null : authentication.getName());
         cat.setClientId(authentication.getOAuth2Request().getClientId());
         cat.setAuthentication(authentication);
-        cat.setRefreshToken(extractTokenKey(refreshToken));
+        cat.setRefreshToken(refreshToken);
+        cat.setAccessToken(accessToken.getValue());
 
         oAuthAccessTokenRepository.save(cat);
     }
@@ -88,7 +89,7 @@ public class OAuthTokenStore implements TokenStore {
     public void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authentication authentication) {
         OAuthRefreshToken crt = new OAuthRefreshToken();
         crt.setId(UUID.randomUUID().toString()+UUID.randomUUID().toString());
-        crt.setTokenId(extractTokenKey(refreshToken.getValue()));
+        crt.setTokenId(refreshToken.getValue());
         crt.setToken(refreshToken);
         crt.setAuthentication(authentication);
         oAuthRefreshTokenRepository.save(crt);

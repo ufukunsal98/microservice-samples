@@ -22,8 +22,11 @@ public class CustomClientDetailsService implements ClientDetailsService {
 
     @Override
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
-
         CustomClientDetails client = customClientDetailsRepository.findByClientId(clientId);
+
+        if (client == null) {
+            throw  new ClientRegistrationException("Client Not Found");
+        }
 
         String resourceIds = client.getResourceIds().stream().collect(Collectors.joining(","));
         String scopes = client.getScope().stream().collect(Collectors.joining(","));

@@ -17,6 +17,7 @@ public class OAuthAccessTokens {
     private String tokenId;
     @Transient
     private OAuth2AccessToken token;
+    private String accessToken;
     private String authenticationId;
     private String username;
     private String clientId;
