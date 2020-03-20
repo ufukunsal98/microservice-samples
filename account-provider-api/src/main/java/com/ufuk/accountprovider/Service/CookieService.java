@@ -30,9 +30,10 @@ public class CookieService {
     private void setExpiredDate(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
         Cookie cookie = new Cookie(ACCESS_TOKEN, auth2AccessToken.getValue());
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
-        cookie.setHttpOnly(false);
+        cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("http://localhost:4200");
+        cookie.setDomain("localhost");
+        cookie.setPath("/");
         response.addCookie(cookie);
     }
 
@@ -40,9 +41,10 @@ public class CookieService {
     private void setRefreshToken(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
         Cookie cookie = new Cookie(REFRESH_TOKEN, auth2AccessToken.getRefreshToken().getValue());
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
-        cookie.setHttpOnly(false);
+        cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath(request.getRequestURL().toString());
+        cookie.setPath("/");
+        cookie.setDomain("localhost");
         response.addCookie(cookie);
     }
 
