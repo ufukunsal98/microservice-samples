@@ -16,16 +16,25 @@ public class OAuthRefreshToken {
     @Id
     private String id;
     private String tokenId;
-    @Transient
-    private OAuth2RefreshToken token;
+
+    private byte[] token; //OAuthRefreshToken
     private byte[] authentication;
 
     public OAuth2Authentication getAuthentication() {
         return SerializableObjectConverter.deserialize(authentication);
     }
 
+    public OAuth2RefreshToken getRefreshToken() {
+        return SerializableObjectConverter.deserializeRefreshToken(token);
+    }
+
+
     public void setAuthentication(OAuth2Authentication authentication) {
         this.authentication = SerializableObjectConverter.serialize(authentication);
+    }
+
+    public void setRefreshToken(OAuth2RefreshToken token) {
+        this.token = SerializableObjectConverter.serializeRefreshToken(token);
     }
 
 }

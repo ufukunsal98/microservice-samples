@@ -50,11 +50,12 @@ public class CookieService {
 
 
     public void setAccessToken(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
-        Cookie cookie = new Cookie(EXPIRES_IN, auth2AccessToken.getExpiration().toString());
+        Cookie cookie = new Cookie(EXPIRES_IN, "asdasd");
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
         cookie.setHttpOnly(false);
         cookie.setSecure(false);
-        cookie.setPath(request.getRequestURL().toString());
-        //response.addCookie(cookie);
+        cookie.setDomain("localhost");
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 }

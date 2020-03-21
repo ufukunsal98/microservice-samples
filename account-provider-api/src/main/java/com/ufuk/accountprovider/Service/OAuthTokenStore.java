@@ -89,16 +89,18 @@ public class OAuthTokenStore implements TokenStore {
     public void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authentication authentication) {
         OAuthRefreshToken crt = new OAuthRefreshToken();
         crt.setId(UUID.randomUUID().toString()+UUID.randomUUID().toString());
-        crt.setTokenId(refreshToken.getValue());
-        crt.setToken(refreshToken);
+        crt.setTokenId(extractTokenKey(refreshToken.getValue()));
+        crt.setRefreshToken(refreshToken);
         crt.setAuthentication(authentication);
         oAuthRefreshTokenRepository.save(crt);
     }
 
     @Override
     public OAuth2RefreshToken readRefreshToken(String tokenValue) {
+        System.out.println(extractTokenKey(tokenValue));
         Optional<OAuthRefreshToken> refreshToken = oAuthRefreshTokenRepository.findByTokenId(extractTokenKey(tokenValue));
-        return refreshToken.isPresent()? refreshToken.get().getToken() :null;
+        System.out.println(refreshToken.isPresent());
+        return refreshToken.isPresent()? refreshToken.get().getRefreshToken() :null;
     }
 
     @Override
@@ -117,7 +119,7 @@ public class OAuthTokenStore implements TokenStore {
 
     @Override
     public void removeAccessTokenUsingRefreshToken(OAuth2RefreshToken refreshToken) {
-        Optional<OAuthAccessTokens> token = oAuthAccessTokenRepository.findByRefreshToken(extractTokenKey(refreshToken.getValue()));
+        Optional<OAuthAccessTokens> token = oAuthAccessTokenRepository.findByRefreshToken(refreshToken.getValue());
         if(token.isPresent()){
             oAuthAccessTokenRepository.delete(token.get());
         }

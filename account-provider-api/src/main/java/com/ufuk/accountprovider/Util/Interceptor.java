@@ -14,9 +14,9 @@ public class Interceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        if (request.getRequestURL().toString().endsWith("/oauth/token")) {
-         throw new NotFoundException("404");
-        }
+//        if (request.getRequestURL().toString().endsWith("/oauth/token")) {
+//         throw new NotFoundException("404");
+//        }
 
         return true;
     }

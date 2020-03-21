@@ -75,16 +75,14 @@ public class AccountService {
 
 
 
-    public OAuth2AccessToken authenticate(HttpServletRequest request, HttpServletResponse response,
-                                          HashMap<String, String> parameters) throws Exception {
+    public OAuth2AccessToken retriveToken(HttpServletRequest request, HttpServletResponse response,
+                                          OAuthAccessTokens authAccessTokens) throws Exception {
         UserDetails userDetails = null;
-        String clientId = parameters.get("client_id");
+        String clientId = authAccessTokens.getClientId();
         ClientDetails authenticatedClient = customClientDetailsService.loadClientByClientId(clientId);
-
-
-        if (!StringUtils.hasText(parameters.get("grant_type"))) {
+        if (!StringUtils.hasText(authAccessTokens.getGrantType())) {
             throw new InvalidRequestException("Missing grant type");
-        } else if (parameters.get("grant_type").equals("implicit")) {
+        } else if (authAccessTokens.getGrantType().equals("implicit")) {
             throw new InvalidGrantException("Implicit grant type not supported from token endpoint");
 //                } else {
 //                    if (this.isAuthCodeRequest(parameters) && !tokenRequest.getScope().isEmpty()) {
@@ -105,13 +103,14 @@ public class AccountService {
 //                }
         }
 
-        HashMap<String, String> authorizationParameters = parameters;
-        ClientDetails clientDetails = customClientDetailsService.loadClientByClientId(authorizationParameters.get("client_id"));
+        ClientDetails clientDetails = customClientDetailsService.loadClientByClientId(authAccessTokens.getClientId());
+
         Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
         Set<String> responseType = new HashSet<String>();
         responseType.add("password");
+        HashMap<String , String> authorizationParameters = setAuthorizationParameters(authAccessTokens);
 
 
         OAuth2Request authorizationRequest = new OAuth2Request(
@@ -120,7 +119,7 @@ public class AccountService {
                 responseType, null);
 
         try {
-            userDetails = userDetailsService.loadUserByUsername(parameters.get("username"));
+            userDetails = userDetailsService.loadUserByUsername(authAccessTokens.getUsername());
         } catch (UsernameNotFoundException exception) {
             throw new InvalidGrantException("Bad credentials");
         }
@@ -190,6 +189,16 @@ public class AccountService {
 
     protected WebResponseExceptionTranslator getExceptionTranslator() {
         return this.providerExceptionHandler;
+    }
+
+
+    public HashMap<String , String> setAuthorizationParameters(OAuthAccessTokens authAccessTokens) {
+        HashMap<String, String> authorizationParameters = new HashMap<>();
+        authorizationParameters.put("grant_type" , authAccessTokens.getGrantType());
+        authorizationParameters.put("client_id" ,  authAccessTokens.getClientId());
+        authorizationParameters.put("client_secret" ,  authAccessTokens.getClientSecret());
+        authorizationParameters.put("username" ,   authAccessTokens.getUsername());
+        return authorizationParameters;
     }
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class})

@@ -26,9 +26,8 @@ public class AccountController {
 
 
     @PostMapping("user/me")
-    public ResponseEntity<OAuth2AccessToken> userInfo(HttpServletRequest request, HttpServletResponse response ,
-                                                      @RequestParam HashMap<String, String> parameters) throws Exception {
-         return ResponseEntity.ok(accountService.authenticate(request , response , parameters));
+    public ResponseEntity<OAuth2AccessToken> retriveToken(HttpServletRequest request, HttpServletResponse response , @RequestBody OAuthAccessTokens authAccessTokens) throws Exception {
+         return ResponseEntity.ok(accountService.retriveToken(request , response , authAccessTokens));
     }
 
 

@@ -2,6 +2,7 @@ package com.ufuk.accountprovider.Entity;
 
 import com.ufuk.accountprovider.Util.SerializableObjectConverter;
 import lombok.Data;
+import lombok.Setter;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
@@ -18,14 +19,29 @@ public class OAuthAccessTokens {
     @Id
     private String id;
     private String tokenId;
+
     @Transient
     private OAuth2AccessToken token;
+
+    @Transient
+    private String grantType;
+
     private String accessToken;
+
     private String authenticationId;
+
     private String username;
+
     private String clientId;
+
+    private String clientSecret;
+
     private byte [] authentication;
+
     private String refreshToken;
+
+    @Transient
+    private String password;
 
 
     public OAuth2Authentication getAuthentication() {
