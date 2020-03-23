@@ -20,8 +20,7 @@ public class OAuthAccessTokens {
     private String id;
     private String tokenId;
 
-    @Transient
-    private OAuth2AccessToken token;
+    private byte[]  token; //OAuth2AccessToken
 
     @Transient
     private String grantType;
@@ -50,6 +49,14 @@ public class OAuthAccessTokens {
 
     public void setAuthentication(OAuth2Authentication authentication) {
         this.authentication = SerializableObjectConverter.serialize(authentication);
+    }
+
+    public void setToken(OAuth2AccessToken token) {
+        this.token = SerializableObjectConverter.serializeAccessToken(token);
+    }
+
+    public OAuth2AccessToken getOAuthAccessToken() {
+        return SerializableObjectConverter.deserializeAccessToken(this.token);
     }
 
 }

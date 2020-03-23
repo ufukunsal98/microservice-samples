@@ -55,7 +55,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure( WebSecurity web ) throws Exception {
         //web.ignoring().antMatchers( HttpMethod.OPTIONS, "/**" );
-        web.ignoring().antMatchers( "/user/me" );
+        web.ignoring().antMatchers( "/user/**" );
     }
 
     @Override
@@ -63,7 +63,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/user/me").permitAll()
+                .antMatchers("/user/**").permitAll()
                 .antMatchers("/api-docs/**").permitAll()
                 .anyRequest().authenticated()
                 .and().anonymous().disable();

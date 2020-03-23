@@ -1,15 +1,18 @@
 package com.ufuk.accountprovider.Entity;
 
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
 
+@NoArgsConstructor
 public class CustomUserDetail implements UserDetails {
 
     private Users user;
     private List<String> groups;
+
 
     public CustomUserDetail(Users user, List<String> groups) {
         this.user = user;

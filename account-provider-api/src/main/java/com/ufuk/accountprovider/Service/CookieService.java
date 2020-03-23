@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 @Service
 public class CookieService {
@@ -27,10 +29,10 @@ public class CookieService {
     }
 
 
-    private void setExpiredDate(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
+    private void setAccessToken(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
         Cookie cookie = new Cookie(ACCESS_TOKEN, auth2AccessToken.getValue());
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
         cookie.setSecure(false);
         cookie.setDomain("localhost");
         cookie.setPath("/");
@@ -41,7 +43,7 @@ public class CookieService {
     private void setRefreshToken(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
         Cookie cookie = new Cookie(REFRESH_TOKEN, auth2AccessToken.getRefreshToken().getValue());
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
         cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setDomain("localhost");
@@ -49,8 +51,15 @@ public class CookieService {
     }
 
 
-    public void setAccessToken(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
-        Cookie cookie = new Cookie(EXPIRES_IN, "asdasd");
+    public void setExpiredDate(HttpServletRequest request, HttpServletResponse response, OAuth2AccessToken auth2AccessToken) {
+        String pattern = "dd-MM-yyyy-HH:mm:ss";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(auth2AccessToken.getExpiration());
+        cal.add(Calendar.SECOND, 30);
+//        System.out.println(auth2AccessToken.getExpiration());
+//        System.out.println(auth2AccessToken.getExpiresIn());
+        Cookie cookie = new Cookie(EXPIRES_IN, simpleDateFormat.format(cal.getTime()) );
         cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days
         cookie.setHttpOnly(false);
         cookie.setSecure(false);

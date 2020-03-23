@@ -72,7 +72,7 @@ public class OAuthTokenStore implements TokenStore {
     public OAuth2AccessToken readAccessToken(String tokenValue) {
         Optional<OAuthAccessTokens> accessToken = oAuthAccessTokenRepository.findByTokenId(extractTokenKey(tokenValue));
         if (accessToken.isPresent()) {
-            return accessToken.get().getToken();
+            return accessToken.get().getOAuthAccessToken();
         }
         return null;
     }
@@ -132,7 +132,7 @@ public class OAuthTokenStore implements TokenStore {
         Optional<OAuthAccessTokens> token = oAuthAccessTokenRepository.findByAuthenticationId(authenticationId);
 
         if(token.isPresent()) {
-            accessToken = token.get().getToken();
+            accessToken = token.get().getOAuthAccessToken();
             if(accessToken != null && !authenticationId.equals(this.authenticationKeyGenerator.extractKey(this.readAuthentication(accessToken)))) {
                 this.removeAccessToken(accessToken);
                 this.storeAccessToken(accessToken, authentication);
@@ -145,7 +145,7 @@ public class OAuthTokenStore implements TokenStore {
     public Collection<OAuth2AccessToken> findTokensByClientIdAndUserName(String clientId, String userName) {
         Collection<OAuth2AccessToken> tokens = new ArrayList<OAuth2AccessToken>();
         List<OAuthAccessTokens> result = oAuthAccessTokenRepository.findByClientIdAndUsername(clientId, userName);
-        result.forEach(e-> tokens.add(e.getToken()));
+        result.forEach(e-> tokens.add(e.getOAuthAccessToken()));
         return tokens;
     }
 
@@ -153,7 +153,7 @@ public class OAuthTokenStore implements TokenStore {
     public Collection<OAuth2AccessToken> findTokensByClientId(String clientId) {
         Collection<OAuth2AccessToken> tokens = new ArrayList<OAuth2AccessToken>();
         List<OAuthAccessTokens> result = oAuthAccessTokenRepository.findByClientId(clientId);
-        result.forEach(e-> tokens.add(e.getToken()));
+        result.forEach(e-> tokens.add(e.getOAuthAccessToken()));
         return tokens;
     }
 

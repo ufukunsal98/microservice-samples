@@ -35,6 +35,7 @@ public class CustomClientDetailsService implements ClientDetailsService {
 
         BaseClientDetails base = new BaseClientDetails(client.getClientId(), resourceIds, scopes, grantTypes, authorities);
         base.setClientSecret(client.getClientSecret());
+        System.out.println(client.getAccessTokenValiditySeconds());
         base.setAccessTokenValiditySeconds(client.getAccessTokenValiditySeconds());
         base.setRefreshTokenValiditySeconds(client.getRefreshTokenValiditySeconds());
         base.setAdditionalInformation(new HashMap<>());
@@ -62,8 +63,8 @@ public class CustomClientDetailsService implements ClientDetailsService {
             client.setAuthorizedGrantTypes(new HashSet<>(Arrays.asList(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN, IMPLICIT)));
             client.setScope(new HashSet<>(Arrays.asList(SCOPE_READ, SCOPE_WRITE, TRUST)));
             client.setSecretRequired(true);
-            client.setAccessTokenValiditySeconds(50000);
-            client.setRefreshTokenValiditySeconds(50000);
+            client.setAccessTokenValiditySeconds(120);
+            client.setRefreshTokenValiditySeconds(120);
             client.setScoped(false);
 
         customClientDetailsRepository.save(client);

@@ -1,7 +1,7 @@
 package com.ufuk.accountprovider.Config;
 
+import com.ufuk.accountprovider.Service.CustomDefaultTokenServices;
 import com.ufuk.accountprovider.Service.CustomUserDetailsService;
-import com.ufuk.accountprovider.Service.OAuthTokenStore;
 import com.ufuk.accountprovider.Util.Interceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,12 +17,9 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.*;
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 import java.util.Map;
 
 
@@ -63,14 +60,15 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(ClientDetailsServiceConfigurer configurer) throws Exception {
 
-        configurer
-                .inMemory()
-                .withClient(CLIENT_ID)
-                .secret(CLIENT_SECRET)
-                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN, IMPLICIT )
-                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
-                .accessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS).
-                refreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
+//        configurer
+//                .inMemory()
+//                .withClient(CLIENT_ID)
+//                .secret(CLIENT_SECRET)
+//                .authorizedGrantTypes(GRANT_TYPE_PASSWORD, AUTHORIZATION_CODE, REFRESH_TOKEN, IMPLICIT )
+//                .scopes(SCOPE_READ, SCOPE_WRITE, TRUST)
+//                .accessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS).
+//                refreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
+        configurer.withClientDetails(clientDetailsService);
     }
 
     @Override
@@ -118,8 +116,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
     @Bean
     @Primary
-    public DefaultTokenServices tokenServices() {
-        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+    public CustomDefaultTokenServices tokenServices() {
+        CustomDefaultTokenServices defaultTokenServices = new CustomDefaultTokenServices();
         defaultTokenServices.setTokenStore(tokenStore);
         defaultTokenServices.setSupportRefreshToken(true);
         return defaultTokenServices;

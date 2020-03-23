@@ -1,6 +1,8 @@
 package com.ufuk.accountprovider.Service;
 
+import com.ufuk.accountprovider.Entity.CustomUserDetail;
 import com.ufuk.accountprovider.Entity.OAuthAccessTokens;
+import com.ufuk.accountprovider.Entity.Users;
 import com.ufuk.accountprovider.Repository.UserRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,7 +57,7 @@ public class AccountService {
     private TokenEndpoint tokenEndpoint;
 
     @Autowired
-    private DefaultTokenServices defaultTokenServices;
+    private CustomDefaultTokenServices defaultTokenServices;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -133,10 +135,15 @@ public class AccountService {
         OAuth2Authentication authenticationRequest = new OAuth2Authentication(
                 authorizationRequest, authenticationToken);
         authenticationRequest.setAuthenticated(true);
-
+        setValiditySeconds(clientDetails);
         OAuth2AccessToken auth2AccessToken = defaultTokenServices.createAccessToken(authenticationRequest);
         cookieService.retriveTokenSetCookie(request, response, auth2AccessToken);
         return auth2AccessToken;
+    }
+
+    private void setValiditySeconds(ClientDetails clientDetails) {
+        defaultTokenServices.setAccessTokenValiditySeconds(clientDetails.getAccessTokenValiditySeconds());
+        defaultTokenServices.setRefreshTokenValiditySeconds(clientDetails.getRefreshTokenValiditySeconds());
     }
 
     public OAuth2AccessToken revokeToken(OAuthAccessTokens oAuthAccessTokens) throws HttpRequestMethodNotSupportedException {
@@ -162,6 +169,7 @@ public class AccountService {
         UserDetails userDetails = null;
         TokenRequest tokenRequest = new TokenRequest(authorizationParameters ,
                 clientDetails.getClientId() , clientDetails.getScope() ,  "refresh_token");
+        setValiditySeconds(clientDetails);
         OAuth2Request authorizationRequest = new OAuth2Request(
                 authorizationParameters, clientDetails.getClientId(),
                 authorities, true, clientDetails.getScope(), clientDetails.getResourceIds(), "",
@@ -185,6 +193,12 @@ public class AccountService {
         OAuth2AccessToken oAuth2AccessToken = defaultTokenServices.refreshAccessToken(oAuthAccessTokens.getAccessToken() , tokenRequest);
 
         return oAuth2AccessToken;
+    }
+
+    public CustomUserDetail getUserInfo(HttpServletRequest request, HttpServletResponse response, OAuthAccessTokens authAccessTokens) {
+        UserDetails userDetails = (UserDetails) defaultTokenServices.loadAuthentication(authAccessTokens.getAccessToken()).getUserAuthentication().getPrincipal();
+        CustomUserDetail customUserDetail = new CustomUserDetail(userRepository.findByUsername(userDetails.getUsername()).get(0) ,  null);
+        return  customUserDetail;
     }
 
     protected WebResponseExceptionTranslator getExceptionTranslator() {
@@ -224,6 +238,8 @@ public class AccountService {
         this.logger.info("Handling error: " + e.getClass().getSimpleName() + ", " + e.getMessage());
         return this.getExceptionTranslator().translate(e);
     }
+
+
 
 }
 

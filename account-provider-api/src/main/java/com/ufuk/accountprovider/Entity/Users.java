@@ -1,6 +1,7 @@
 package com.ufuk.accountprovider.Entity;
 
-import lombok.Data;
+import lombok.*;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,8 @@ import java.io.Serializable;
 @Data
 @Entity
 @Table
+@NoArgsConstructor
+@ToString
 public class Users  implements Serializable {
 
     @Id
@@ -27,6 +30,7 @@ public class Users  implements Serializable {
 
     @Column
     @NotNull
+    @JsonIgnore
     private String password;
 
     @NotNull

@@ -11,7 +11,7 @@
     <groupId>com.ufuk</groupId>
     <artifactId>account-provider-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo</name>
+    <name>account-provider-api</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -46,7 +46,13 @@
             <version>2.1.4.RELEASE</version>
         </dependency>
 
-        
+        <dependency>
+            <groupId>com.oracle.ojdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+
         <dependency>
             <groupId>org.springframework.security.oauth</groupId>
             <artifactId>spring-security-oauth2</artifactId>
