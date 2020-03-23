@@ -30,7 +30,6 @@ public class Users  implements Serializable {
 
     @Column
     @NotNull
-    @JsonIgnore
     private String password;
 
     @NotNull

@@ -8,15 +8,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.BadClientCredentialsException;
 import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
@@ -35,6 +39,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +75,24 @@ public class AccountService {
 
     @Autowired
     private CookieService cookieService;
+
+////    @Value("${activedirectory.url}")
+    private String activeDirectoryUrl = "ldap://192.168.203.132:389";
+//
+////    @Value("${activedirectory.domain}")
+    private String getActiveDirectoryDomain = "DOMAIN.local";
+//
+//    private String baseDn = "dn=CN=uunsal,CN=Users,DC=DOMAIN,DC=local";
+
+    private String ldapUserDnPattern  = "";
+
+    @Autowired
+    private LdapTemplate ldapTemplate;
+
+    ActiveDirectoryLdapAuthenticationProvider provider = new ActiveDirectoryLdapAuthenticationProvider(getActiveDirectoryDomain,
+            activeDirectoryUrl);
+
+
 
     protected final Log logger = LogFactory.getLog(this.getClass());
 
@@ -120,26 +143,36 @@ public class AccountService {
                 authorities, true, clientDetails.getScope(), clientDetails.getResourceIds(), "",
                 responseType, null);
 
-        try {
-            userDetails = userDetailsService.loadUserByUsername(authAccessTokens.getUsername());
-        } catch (UsernameNotFoundException exception) {
-            throw new InvalidGrantException("Bad credentials");
-        }
+//        try {
+//            userDetails = userDetailsService.loadUserByUsername(authAccessTokens.getUsername());
+//        } catch (UsernameNotFoundException exception) {
+//            throw new InvalidGrantException("Bad credentials");
+//        }
 
 
-        User userPrincipal = new User(userDetails.getUsername(), userDetails.getPassword(), new ArrayList<>());
-
+        User userPrincipal = new User(authAccessTokens.getUsername(), authAccessTokens.getPassword(), new ArrayList<>());
+        ldapTemplate.setIgnorePartialResultException(false);
+        provider.setConvertSubErrorCodesToExceptions(true);
+        provider.setUseAuthenticationRequestCredentials(true);
+        provider.setSearchFilter("(sAMAccountName={0})");
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                userPrincipal, null, authorities);
-
-        OAuth2Authentication authenticationRequest = new OAuth2Authentication(
-                authorizationRequest, authenticationToken);
-        authenticationRequest.setAuthenticated(true);
-        setValiditySeconds(clientDetails);
-        OAuth2AccessToken auth2AccessToken = defaultTokenServices.createAccessToken(authenticationRequest);
-        cookieService.retriveTokenSetCookie(request, response, auth2AccessToken);
-        return auth2AccessToken;
+                userPrincipal, userPrincipal.getPassword());
+        System.out.println(authenticationToken.getCredentials() + "  pass");
+        provider.authenticate(authenticationToken);
+//        OAuth2Authentication authenticationRequest = new OAuth2Authentication(
+//                authorizationRequest, authenticationToken);
+//        authenticationRequest.setAuthenticated(true);
+//
+//        System.out.println(authenticationRequest.getUserAuthentication());
+//        System.out.println(((UserDetails)authenticationRequest.getPrincipal()).getPassword());
+////        provider.authenticate(authenticationRequest.getUserAuthentication());
+//        setValiditySeconds(clientDetails);
+//        OAuth2AccessToken auth2AccessToken = defaultTokenServices.createAccessToken(authenticationRequest);
+//        cookieService.retriveTokenSetCookie(request, response, auth2AccessToken);
+        return null;
     }
+
+
 
     private void setValiditySeconds(ClientDetails clientDetails) {
         defaultTokenServices.setAccessTokenValiditySeconds(clientDetails.getAccessTokenValiditySeconds());
